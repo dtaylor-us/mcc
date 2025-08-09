@@ -1,22 +1,21 @@
-package com.example.mcpserver;
+package us.dtaylor.mcpserver;
 
-import com.example.mcpserver.domain.Asset;
-import com.example.mcpserver.repo.WorkLogRepository;
-import com.example.mcpserver.tools.AssetTools;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import us.dtaylor.mcpserver.domain.Asset;
+import us.dtaylor.mcpserver.repository.WorkLogRepository;
+import us.dtaylor.mcpserver.tools.AssetTools;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -53,7 +52,9 @@ public class AssetMcpServerTests {
                     "app.qr.storage.local.dir=" + tmp.toString(),
                     "app.qr.storage.local.publicBaseUrl=http://localhost:8081/qr-images",
                     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-                    "spring.jpa.hibernate.ddl-auto=create-drop"
+                    "spring.jpa.hibernate.ddl-auto=create-drop",
+                    "spring.datasource.platform=h2",
+                    "spring.sql.init.data-locations=classpath:data-h2.sql" // <-- force H2 data file for tests
             );
         }
     }
@@ -92,10 +93,10 @@ public class AssetMcpServerTests {
     void createAsset_ReturnsQrAndImageUrl(@TempDir Path temp) throws Exception {
         String manualUri = createManualFile(temp, "Simple manual content");
         Map<String, Object> request = Map.of(
-                "name", "Pump", 
-                "model", "P1", 
-                "serialNumber", "SN001", 
-                "location", "Room 1", 
+                "name", "Pump",
+                "model", "P1",
+                "serialNumber", "SN001",
+                "location", "Room 1",
                 "manualPath", manualUri
         );
         mvc.perform(post("/api/assets/v1")
@@ -171,8 +172,8 @@ public class AssetMcpServerTests {
                 "manualPath", manualUri
         );
         mvc.perform(post("/api/assets/v1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
         // Now call manual.get via tool
         AssetTools.AssetResponse resp = assetTools.search("QR-LONGTEST");
@@ -195,8 +196,8 @@ public class AssetMcpServerTests {
                 "manualPath", manualUri
         );
         mvc.perform(post("/api/assets/v1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
         // search to get ID
         AssetTools.AssetResponse resp = assetTools.search("QR-WLTEST");
