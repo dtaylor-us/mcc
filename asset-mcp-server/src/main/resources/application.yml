@@ -1,0 +1,48 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assetdb
+    username: asset
+    password: asset
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  # Enable the MCP server and expose SSE endpoints
+  ai:
+    mcp:
+      server:
+        enabled: true
+        type: SYNC
+        capabilities:
+          tool: true
+          resource: true
+          prompt: true
+        # SSE transport enabled by the webmvc starter
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+
+app:
+  qr:
+    # The URL your technicians land on after scanning.
+    # For local dev, point at your agent app (which will handle /scan/{qr}).
+    scanBaseUrl: http://localhost:8080/scan
+
+    # Storage mode: local (now) | s3 (later)
+    storage:
+      type: local
+
+      # Local settings
+      local:
+        # Where to write PNGs
+        dir: ${user.home}/projects/maintenance-control-console/qr
+        # Public URL base for serving the PNGs
+        publicBaseUrl: http://localhost:8081/qr-images
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

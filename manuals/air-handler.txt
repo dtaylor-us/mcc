@@ -1,0 +1,11 @@
+AIR HANDLER MODEL AH-900
+Safety:
+- Disconnect power before servicing.
+Filter:
+- Replace MERV-13 filter monthly during heavy usage.
+Maintenance Checklist:
+1) Inspect belts
+2) Check bearings
+3) Verify airflow
+Troubleshooting:
+- If pressure drop >0.8" w.c., replace filter.
