@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agentdb
+    username: agent
+    password: agent
+
+  ai:
+    # LLM model (OpenAI example). You can swap providers later.
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.2
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+    # MCP Client: connect to Module A and expose its tools to the LLM
+    mcp:
+      client:
+        enabled: true
+        type: SYNC
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            assetServer:
+              url: http://localhost:8081
+              sse-endpoint: /sse
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
