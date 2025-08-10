@@ -1,16 +1,79 @@
-version: "3.9"
+version: '3.8'
+
 services:
-  pg:
+  # PostgreSQL database used by both modules.  Two separate
+  # schemas/credentials are used to isolate the asset and agent data.
+  postgres:
     image: postgres:16
-    container_name: fm-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Asset MCP server.  Built from the local Dockerfile.  Uses its own
+  # schema and credentials in the shared Postgres instance.  QR images
+  # are written to a dedicated volume mounted at /app/qr.
+  asset-mcp-server:
+    build: ../asset-mcp-server
+    environment:
+      SERVER_PORT: 8081
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/assetdb
+      DATASOURCE_USERNAME: asset
+      DATASOURCE_PASSWORD: asset
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: assetdb
+      QR_SCAN_BASE_URL: http://ops-agent-app:8080/scan
+      QR_STORAGE_LOCAL_DIR: /app/qr
+      QR_STORAGE_PUBLIC_BASE_URL: http://asset-mcp-server:8081/qr-images
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - asset-qr:/app/qr
+
+  # Operations agent application.  Connects to the asset server via
+  # internal network.  Uses its own schema and credentials.  Basic
+  # authentication credentials are set via environment variables.
+  # ops-agent-app:
+  #   build: ../ops-agent-app
+  #   environment:
+  #     SERVER_PORT: 8080
+  #     DATASOURCE_URL: jdbc:postgresql://postgres:5432/agentdb
+  #     DATASOURCE_USERNAME: agent
+  #     DATASOURCE_PASSWORD: agent
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_NAME: agentdb
+  #     MCP_SERVER_URL: http://asset-mcp-server:8081
+  #     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  #     OPENAI_MODEL: gpt-4o
+  #     APP_SECURITY_USERNAME: agent
+  #     APP_SECURITY_PASSWORD: password
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     asset-mcp-server:
+  #       condition: service_started
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
 
 volumes:
-  pgdata:
+  db-data:
+  asset-qr:

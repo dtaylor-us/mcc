@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+     Use Spring Boot's base Logback configuration as a foundation and
+     override the console log pattern to include a timestamp and logger
+     name.  Structured logging can be configured here as required for
+     production observability.
+    -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+</configuration>

@@ -1,7 +1,6 @@
 package us.dtaylor.mcpserver.domain;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 import java.time.Instant;
 import java.util.UUID;

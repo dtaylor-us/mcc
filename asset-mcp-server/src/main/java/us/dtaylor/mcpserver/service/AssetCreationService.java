@@ -10,8 +10,16 @@ import us.dtaylor.mcpserver.service.storage.QrStorage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Service responsible for creating new {@link Asset} instances.  When a new
+ * asset is created this service will generate a QR code image, persist
+ * the asset entity and return the persisted instance with the QR image
+ * URL populated.  The scan URL used when generating the QR code is
+ * configurable via application properties.
+ */
 @Service
 public class AssetCreationService {
 
@@ -31,29 +39,38 @@ public class AssetCreationService {
         this.scanBaseUrl = scanBaseUrl.endsWith("/") ? scanBaseUrl.substring(0, scanBaseUrl.length()-1) : scanBaseUrl;
     }
 
+    /**
+     * Creates a new asset, generating a QR code if necessary and storing
+     * the resulting image.  The QR code encodes a URL composed of the
+     * configured scan base URL and the asset's QR code.  If no QR code
+     * was provided on the entity a random one is generated.
+     *
+     * @param asset the asset to create
+     * @return the persisted asset with QR image URL populated
+     */
     @Transactional
     public Asset createWithQr(Asset asset) throws Exception {
         // Ensure qrCode exists (allow user to supply, or generate one)
         if (asset.getQrCode() == null || asset.getQrCode().isBlank()) {
             asset.setQrCode(generateShortCode()); // e.g., QR-ABC123
         }
-
-        // Persist first to get an ID (if needed)
+        // default installation timestamp if missing
+        if (asset.getInstalledAt() == null) {
+            asset.setInstalledAt(Instant.now());
+        }
+        // persist to obtain an ID
         Asset saved = repo.save(asset);
 
         // Build scan URL (what the QR encodes)
         String qrData = scanBaseUrl + "/" + saved.getQrCode();
-
-        // Generate PNG to a temp file (then hand to storage)
-        String fileName = saved.getQrCode() + ".png";
-        Path tmp = Files.createTempDirectory("qrgen").resolve(fileName);
-        qrCodeService.generateQrCode(qrData, tmp);
-
-        // Store & get a public URL (local file mapping or S3/Blob URL)
-        String publicUrl = qrStorage.storeAndGetPublicUrl(tmp, fileName);
-
-        // Save URL on the asset
-        saved.setQrImagePath(publicUrl);
+        // generate QR image into a temporary location
+        Path tmpDir = Files.createTempDirectory("qr-asset");
+        Path tmpFile = tmpDir.resolve(saved.getQrCode() + ".png");
+        qrCodeService.generatePng(qrData, tmpFile);
+        // store the image and obtain a public URL
+        String qrImageUrl = qrStorage.storeAndGetPublicUrl(tmpFile, saved.getQrCode() + ".png");
+        // update asset with image URL
+        saved.setQrImagePath(qrImageUrl);
         return repo.save(saved);
     }
 

@@ -1,16 +1,40 @@
 server:
   port: 8081
 
+# Spring DataSource configuration for in-memory tests. The H2 database
+# is used by default to avoid external dependencies. In production
+# deployments you may override these settings via environment variables
+# or a different configuration file (e.g. application-prod.yml).
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/assetdb
-    username: asset
-    password: asset
+    url: jdbc:h2:mem:assetdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   jpa:
     hibernate:
       ddl-auto: update
     open-in-view: false
-  # Enable the MCP server and expose SSE endpoints
+
+# Configuration for QR code handling.  The scan base URL is used
+# when generating QR codes for new assets; the codes will direct the
+# browser to this URL with the asset's QR code appended.  The local
+# storage directory and public base URL are used by the LocalQrStorage
+# implementation to persist QR images and construct a public URL for
+# retrieval.  These values are overridden in tests where necessary.
+app:
+  qr:
+    scanBaseUrl: http://localhost:8080/scan
+    storage:
+      type: local
+      local:
+        dir: ${java.io.tmpdir}/asset-mcp-server/qr
+        publicBaseUrl: http://localhost:${server.port}/qr-images
+
+  # Enable the MCP server and expose tools over SSE.  Spring AI's
+  # MCP server starter will auto-configure the necessary beans and
+  # endpoints based on this configuration.  See the Spring AI
+  # documentation for details.
   ai:
     mcp:
       server:
@@ -20,29 +44,7 @@ spring:
           tool: true
           resource: true
           prompt: true
-        # SSE transport enabled by the webmvc starter
+        # SSE transport is exposed at this endpoint; clients connect
+        # here to receive tool calls.
         sse-endpoint: /sse
         sse-message-endpoint: /mcp/message
-
-app:
-  qr:
-    # The URL your technicians land on after scanning.
-    # For local dev, point at your agent app (which will handle /scan/{qr}).
-    scanBaseUrl: http://localhost:8080/scan
-
-    # Storage mode: local (now) | s3 (later)
-    storage:
-      type: local
-
-      # Local settings
-      local:
-        # Where to write PNGs
-        dir: ${user.home}/projects/maintenance-control-console/qr
-        # Public URL base for serving the PNGs
-        publicBaseUrl: http://localhost:8081/qr-images
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info

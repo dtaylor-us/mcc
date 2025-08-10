@@ -1,0 +1,57 @@
+server:
+  # Port for the MCP server in production.  Defaults to 8081 if not set via
+  # the SERVER_PORT environment variable.  Externalise this value so
+  # containerised deployments can bind to alternate ports.
+  port: ${SERVER_PORT:8081}
+
+spring:
+  datasource:
+    # Datasource URL provided via environment variables.  Use the DB_HOST,
+    # DB_PORT and DB_NAME variables to assemble a sensible default if
+    # DATASOURCE_URL is not explicitly set.  The default points to a
+    # PostgreSQL instance on localhost.  See README for details on
+    # configuring these values for containerised or managed databases.
+    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:assetdb}}
+    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    username: ${DATASOURCE_USERNAME:asset}
+    password: ${DATASOURCE_PASSWORD:asset}
+  jpa:
+    hibernate:
+      # In production validate the schema rather than attempting to update
+      # automatically.  Schema migrations should be managed via Flyway or
+      # Liquibase in a CI/CD pipeline.
+      ddl-auto: validate
+    open-in-view: false
+
+app:
+  qr:
+    # Base URL used when encoding QR codes.  The scanner will navigate to
+    # {scanBaseUrl}/{qrCode}.  This should point at the agent application
+    # (or a web UI) in production.
+    scanBaseUrl: ${QR_SCAN_BASE_URL:http://localhost:8080/scan}
+    storage:
+      # The storage type is set via environment variable.  Supported values
+      # include 'local' and, in future, 'azure' for Azure Blob Storage.
+      type: ${QR_STORAGE_TYPE:local}
+      local:
+        # Directory to store generated QR images when using local storage.
+        # In a containerised environment this should be a writeable volume
+        # mount.  Defaults to '/app/qr'.
+        dir: ${QR_STORAGE_LOCAL_DIR:/app/qr}
+        # Public base URL for retrieving QR images.  When running behind a
+        # reverse proxy this should be updated to the proxy address.
+        publicBaseUrl: ${QR_STORAGE_PUBLIC_BASE_URL:http://localhost:8081/qr-images}
+
+  ai:
+    mcp:
+      server:
+        enabled: true
+        type: SYNC
+        capabilities:
+          tool: true
+          resource: true
+          prompt: true
+        # SSE transport exposed at this path.  Clients connect here to
+        # retrieve tool descriptions and to invoke tools.
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
