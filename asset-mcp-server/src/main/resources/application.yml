@@ -7,10 +7,15 @@ server:
 # or a different configuration file (e.g. application-prod.yml).
 spring:
   datasource:
-    url: jdbc:h2:mem:assetdb;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    # Datasource URL provided via environment variables.  Use the DB_HOST,
+    # DB_PORT and DB_NAME variables to assemble a sensible default if
+    # DATASOURCE_URL is not explicitly set.  The default points to a
+    # PostgreSQL instance on localhost.  See README for details on
+    # configuring these values for containerised or managed databases.
+    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:assetdb}}
+    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    username: ${DATASOURCE_USERNAME:asset}
+    password: ${DATASOURCE_PASSWORD:asset}
   jpa:
     hibernate:
       ddl-auto: update
@@ -30,7 +35,8 @@ app:
       local:
         dir: ${java.io.tmpdir}/asset-mcp-server/qr
         publicBaseUrl: http://localhost:${server.port}/qr-images
-
+  cors:
+    allowed-origins: http://localhost:8080,http://localhost:3000,http://localhost:5173
   # Enable the MCP server and expose tools over SSE.  Spring AI's
   # MCP server starter will auto-configure the necessary beans and
   # endpoints based on this configuration.  See the Spring AI

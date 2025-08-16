@@ -2,8 +2,14 @@ package us.dtaylor.mcpserver.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,12 +17,18 @@ import java.util.UUID;
 @Entity
 public class WorkLog {
     @Id @GeneratedValue private UUID id;
-    @Column(nullable = false) private UUID assetId;
     private String technician;
     private String action;
     private Integer durationMinutes;
     private Instant createdAt = Instant.now();
     private String notes;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "asset_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_worklog_asset"))
+    @OnDelete(action = OnDeleteAction.CASCADE) // DB-level cascade delete
+    // @JsonBackReference // only if you expose Asset.workLogs and use Managed/Back pair
+    private Asset asset;
 
     // Getters and Setters
     public UUID getId() {
@@ -27,13 +39,6 @@ public class WorkLog {
         this.id = id;
     }
 
-    public UUID getAssetId() {
-        return assetId;
-    }
-
-    public void setAssetId(UUID assetId) {
-        this.assetId = assetId;
-    }
 
     public String getTechnician() {
         return technician;
@@ -72,5 +77,13 @@ public class WorkLog {
     }
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public void setAsset(Asset asset) {
+        this.asset = asset;
+    }
+
+    public Asset getAsset() {
+        return asset;
     }
 }

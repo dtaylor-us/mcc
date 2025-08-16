@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:agentdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      platform: h2
+      schema-locations: classpath:schema-h2.sql
+  ai:
+    # Local MCP server for dev
+    mcp:
+      client:
+        enabled: true
+        type: SYNC
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            assetServer:
+              url: http://localhost:8081
+              sse-endpoint: /sse
+    openai:
+      # Dev fallback only; in prod, require a real secret via env.
+      api-key: ${OPENAI_API_KEY:dummy}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.2
+    chat:
+      memory:
+        repository:
+          jdbc:
+            # We’re running our own schema-h2.sql in dev
+            initialize-schema: never
+
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+# Dev-only basic auth defaults; override per-env in prod.
+app:
+  security:
+    username: agent
+    password: password
+
+management:
+  endpoints:
+    web:
+      # Wider exposure in dev so you can inspect env/config/metrics
+      exposure:
+        include: health,info,metrics,env,configprops,beans,loggers,threaddump,heapdump,mappings
+  endpoint:
+    health:
+      show-details: always
+    env:
+      show-values: ALWAYS
+    configprops:
+      show-values: WHEN_AUTHORIZED

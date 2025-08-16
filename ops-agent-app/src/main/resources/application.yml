@@ -1,40 +1,22 @@
-server:
-  port: 8080
+# Keep the base file minimal and environment-agnostic.
+# Everything connection- or environment-specific goes into profile files
+# (application-dev.yml, application-prod.yml) or env vars.
 
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/agentdb
-    username: agent
-    password: agent
-
   ai:
-    # LLM model (OpenAI example). You can swap providers later.
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o
-          temperature: 0.2
     chat:
       memory:
         repository:
           jdbc:
-            initialize-schema: always
-    # MCP Client: connect to Module A and expose its tools to the LLM
-    mcp:
-      client:
-        enabled: true
-        type: SYNC
-        toolcallback:
-          enabled: true
-        sse:
-          connections:
-            assetServer:
-              url: http://localhost:8081
-              sse-endpoint: /sse
+            # In prod we recommend managing schema via migrations; dev overrides this.
+            initialize-schema: never
 
 management:
   endpoints:
     web:
+      # In base, expose minimal set; dev will widen this.
       exposure:
         include: health,info
+  endpoint:
+    health:
+      show-details: never

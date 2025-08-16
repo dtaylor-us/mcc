@@ -1,0 +1,8 @@
+
+{
+  "name": "Ops Agent + Asset MCP Server",
+  "description": "A maintenance catalog for facilities teams. Techs can scan a QR on an asset, instantly see a manual preview, and log work. Supervisors can add/edit assets, print QR codes, and review work history.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

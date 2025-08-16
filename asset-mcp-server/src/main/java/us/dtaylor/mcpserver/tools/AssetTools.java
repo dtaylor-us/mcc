@@ -18,11 +18,13 @@ public class AssetTools {
     private final AssetService assets;
     private final WorkLogService worklogs;
     private final ManualService manuals;
+    private final AssetService assetService;
 
-    public AssetTools(AssetService assets, WorkLogService worklogs, ManualService manuals) {
+    public AssetTools(AssetService assets, WorkLogService worklogs, ManualService manuals, AssetService assetService) {
         this.assets = assets;
         this.worklogs = worklogs;
         this.manuals = manuals;
+        this.assetService = assetService;
     }
 
     // ====== Tool 1: search asset ======
@@ -50,7 +52,8 @@ public class AssetTools {
     @Tool(name = "worklog.create", description = "Create a maintenance worklog for the asset. Use short action, optional notes, duration minutes, and technician.")
     public Map<String, Object> createWorklog(CreateWorklogRequest req) {
         var wl = new WorkLog();
-        wl.setAssetId(UUID.fromString(req.assetId()));
+        Asset asset = assetService.getById(UUID.fromString(req.assetId()));
+        wl.setAsset(asset); // Validate asset exists
         wl.setTechnician(req.technician());
         wl.setAction(req.action());
         wl.setDurationMinutes(req.durationMinutes());

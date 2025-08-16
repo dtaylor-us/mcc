@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agentdb}}
+    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    username: ${DATASOURCE_USERNAME:agent}
+    password: ${DATASOURCE_PASSWORD:agent}
+  ai:
+    mcp:
+      client:
+        enabled: true
+        type: SYNC
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            assetServer:
+              url: ${MCP_SERVER_URL:http://asset-mcp-server:8081}
+              sse-endpoint: /sse
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o}
+          temperature: 0.2
+    chat:
+      memory:
+        repository:
+          jdbc:
+            # In prod prefer schema managed by migrations; set to 'always'
+            # only if your DB user can create tables and you accept auto-init.
+            initialize-schema: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# No default creds in prod; provide via env if using Basic auth
+app:
+  security:
+    username: ${APP_SECURITY_USERNAME:}
+    password: ${APP_SECURITY_PASSWORD:}

@@ -46,33 +46,33 @@ services:
   # Operations agent application.  Connects to the asset server via
   # internal network.  Uses its own schema and credentials.  Basic
   # authentication credentials are set via environment variables.
-  # ops-agent-app:
-  #   build: ../ops-agent-app
-  #   environment:
-  #     SERVER_PORT: 8080
-  #     DATASOURCE_URL: jdbc:postgresql://postgres:5432/agentdb
-  #     DATASOURCE_USERNAME: agent
-  #     DATASOURCE_PASSWORD: agent
-  #     DB_HOST: postgres
-  #     DB_PORT: 5432
-  #     DB_NAME: agentdb
-  #     MCP_SERVER_URL: http://asset-mcp-server:8081
-  #     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-  #     OPENAI_MODEL: gpt-4o
-  #     APP_SECURITY_USERNAME: agent
-  #     APP_SECURITY_PASSWORD: password
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     asset-mcp-server:
-  #       condition: service_started
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
+  ops-agent-app:
+    build: ../ops-agent-app
+    environment:
+      SERVER_PORT: 8080
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/agentdb
+      DATASOURCE_USERNAME: agent
+      DATASOURCE_PASSWORD: agent
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: agentdb
+      MCP_SERVER_URL: http://asset-mcp-server:8081
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: gpt-4o
+      APP_SECURITY_USERNAME: agent
+      APP_SECURITY_PASSWORD: password
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      asset-mcp-server:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   db-data:

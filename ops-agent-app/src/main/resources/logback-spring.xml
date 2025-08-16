@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+     Define a simple console log pattern for the agent application.  In
+     production consider forwarding logs to Azure Monitor or other
+     observability platforms via App Insights or Fluent Bit.
+    -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+</configuration>
