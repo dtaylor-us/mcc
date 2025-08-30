@@ -43,13 +43,13 @@ class AgentControllerTest {
         // ultimately yields a fixed response string.  Deep stubs allow us
         // to stub the result of a deeply nested call chain.
         Mockito.when(
-            chatClient.prompt()
-                .system(ArgumentMatchers.anyString())
-                .user(ArgumentMatchers.anyString())
-                .toolCallbacks(ArgumentMatchers.anyList())
-                .advisors((Consumer<ChatClient.AdvisorSpec>) ArgumentMatchers.any())
-                .call()
-                .content()
+                chatClient.prompt()
+                        .system(ArgumentMatchers.anyString())
+                        .user(ArgumentMatchers.anyString())
+                        .toolCallbacks(ArgumentMatchers.anyList())
+                        .advisors((Consumer<ChatClient.AdvisorSpec>) ArgumentMatchers.any())
+                        .call()
+                        .content()
         ).thenReturn("stubbed-answer");
 
         // Create a trivial ChatMemory mock.  The contents of the memory
@@ -86,21 +86,22 @@ class AgentControllerTest {
      * @param name the name of the tool
      * @return a stubbed ToolCallback
      */
-private static ToolCallback stubToolCallback(String name) {
-    ToolCallback callback = Mockito.mock(ToolCallback.class);
-    // Create a stub ToolDefinition with the required name
-    org.springframework.ai.tool.definition.ToolDefinition toolDef = Mockito.mock(org.springframework.ai.tool.definition.ToolDefinition.class);
-    Mockito.when(toolDef.name()).thenReturn(name);
-    Mockito.when(callback.getToolDefinition()).thenReturn(toolDef);
-    return callback;
-}
+    private static ToolCallback stubToolCallback(String name) {
+        ToolCallback callback = Mockito.mock(ToolCallback.class);
+        // Create a stub ToolDefinition with the required name
+        org.springframework.ai.tool.definition.ToolDefinition toolDef = Mockito.mock(org.springframework.ai.tool.definition.ToolDefinition.class);
+        Mockito.when(toolDef.name()).thenReturn(name);
+        Mockito.when(callback.getToolDefinition()).thenReturn(toolDef);
+        return callback;
+    }
+
     @Test
     void ask_ReturnsAnswerAndToolCount() throws Exception {
         // Arrange: inject a provider exposing three tools
         ToolCallback[] callbacks = {
-            stubToolCallback("asset.search"),
-            stubToolCallback("manual.get"),
-            stubToolCallback("worklog.create")
+                stubToolCallback("asset.search"),
+                stubToolCallback("manual.get"),
+                stubToolCallback("worklog.create")
         };
         setToolProvider(() -> callbacks);
 
@@ -132,7 +133,7 @@ private static ToolCallback stubToolCallback(String name) {
         // controller rebuilds its provider based on client names, we simulate
         // this by injecting providers manually after calling the method.
         // Initially inject provider with two tools
-        ToolCallback[] primaryTools = { stubToolCallback("asset.search"), stubToolCallback("manual.get") };
+        ToolCallback[] primaryTools = {stubToolCallback("asset.search"), stubToolCallback("manual.get")};
         setToolProvider(() -> primaryTools);
         // Act: call setAllowedServerNames with a set that does not match any
         // MCP clients (the controller's internal list is empty).  This

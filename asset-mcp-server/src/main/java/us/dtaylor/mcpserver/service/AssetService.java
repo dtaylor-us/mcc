@@ -98,15 +98,14 @@ public class AssetService {
                 }
                 boolean truncated = Files.size(path) > sb.length();
                 return new ManualPreviewDto(asset.getId(), normalized, sb.toString(), truncated);
-            }
-
-            if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+            } else if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
                 // Still avoid remote fetch for security; UI provides "Open Full Manual".
                 return new ManualPreviewDto(asset.getId(), normalized,
                         "[Preview not available for remote manuals. Open the full manual link.]", true);
+            } else {
+                throw new ResponseStatusException(UNSUPPORTED_MEDIA_TYPE, "Unsupported manual scheme: " + scheme);
             }
 
-            throw new ResponseStatusException(UNSUPPORTED_MEDIA_TYPE, "Unsupported manual scheme: " + scheme);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(UNSUPPORTED_MEDIA_TYPE, "Invalid manual path/URI: " + raw, e);
         } catch (IOException e) {
