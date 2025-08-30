@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QrScanner from '../components/QrScanner';
@@ -41,7 +40,7 @@ const HomeScreen: React.FC = () => {
       setIsLoading(false);
     }
   }, [navigate, setCurrentAsset]);
-  
+
   const handleRowClick = (asset: Asset) => {
     setCurrentAsset(asset);
     navigate(`/asset/id/${asset.id}`);
@@ -72,35 +71,73 @@ const HomeScreen: React.FC = () => {
           </form>
         </div>
       </div>
-      
+
       {error && <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-md">{error}</div>}
 
       <div>
         <h3 className="text-xl font-semibold mb-4">Search Results</h3>
         {isLoading && searchResults.length === 0 && <p>Loading...</p>}
         {!isLoading && searchResults.length === 0 && <p className="text-slate-400">No assets found. Try a new search.</p>}
+
         {searchResults.length > 0 && (
-          <div className="overflow-x-auto bg-slate-800 rounded-lg">
-            <table className="min-w-full divide-y divide-slate-700">
-              <thead className="bg-slate-700/50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Model</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Serial Number</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Location</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700">
-                {searchResults.map((asset) => (
-                  <tr key={asset.id} onClick={() => handleRowClick(asset)} className="hover:bg-slate-700 cursor-pointer">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{asset.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{asset.model}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{asset.serialNumber}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{asset.location}</td>
+          <div className="bg-slate-800 rounded-lg">
+            {/* Desktop/tablet table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-700">
+                <thead className="bg-slate-700/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Model</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Serial Number</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Location</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-700">
+                  {searchResults.map((asset) => (
+                    <tr key={asset.id} className="hover:bg-slate-700">
+                      {/* Make the full row a real button for reliable taps/clicks */}
+                      <td colSpan={4} className="p-0">
+                        <button
+                          type="button"
+                          onClick={() => handleRowClick(asset)}
+                          className="w-full text-left px-6 py-4 flex flex-wrap gap-x-6 gap-y-1 items-center focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <span className="text-sm font-medium text-white min-w-[10rem] truncate">{asset.name}</span>
+                          <span className="text-sm text-slate-300 min-w-[8rem] truncate">{asset.model}</span>
+                          <span className="text-sm text-slate-300 min-w-[10rem] truncate">{asset.serialNumber}</span>
+                          <span className="text-sm text-slate-300 min-w-[10rem] truncate">{asset.location}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile columnar list */}
+            <ul className="md:hidden divide-y divide-slate-700">
+              {searchResults.map((asset) => (
+                <li key={asset.id} className="p-0">
+                  <button
+                    type="button"
+                    onClick={() => handleRowClick(asset)}
+                    className="w-full text-left px-4 py-4 min-h-[48px] active:bg-slate-700/70 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    aria-label={`Open asset ${asset.name}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-white font-semibold truncate">{asset.name}</div>
+                        <div className="text-slate-300 text-sm truncate">
+                          {asset.model ?? '—'} · {asset.serialNumber ?? '—'}
+                        </div>
+                        <div className="text-slate-400 text-xs truncate">{asset.location ?? '—'}</div>
+                      </div>
+                      <span className="shrink-0 text-slate-400 text-sm">View ›</span>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

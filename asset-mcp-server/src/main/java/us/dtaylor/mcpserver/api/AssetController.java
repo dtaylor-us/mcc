@@ -14,6 +14,7 @@ import us.dtaylor.mcpserver.dto.CreateAssetRequest;
 import us.dtaylor.mcpserver.dto.ManualPreviewDto;
 import us.dtaylor.mcpserver.service.AssetCreationService;
 import us.dtaylor.mcpserver.service.AssetService;
+import us.dtaylor.mcpserver.util.ManualPathNormalizer;
 
 import java.time.Instant;
 import java.util.List;
@@ -83,7 +84,7 @@ public class AssetController {
         a.setModel(req.model());
         a.setSerialNumber(req.serialNumber());
         a.setLocation(req.location());
-        a.setManualPath(req.manualPath());
+        a.setManualPath(ManualPathNormalizer.normalize(req.manualPath()));
         a.setInstalledAt(req.installedAt() == null ? Instant.now() : req.installedAt());
 
         Asset saved = createService.createWithQr(a);

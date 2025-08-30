@@ -6,6 +6,7 @@ import { mcpService, agentService } from '../services/apiService';
 import { Asset, WorkLog, ChatMessage, ManualPreview } from '../types';
 import { PaperAirplaneIcon } from '../components/icons';
 
+
 const AssetDetailScreen: React.FC = () => {
   const { id, qrCode } = useParams<{ id?: string, qrCode?: string }>();
   const navigate = useNavigate();
@@ -78,26 +79,45 @@ const AssetDetailScreen: React.FC = () => {
         </div>
         <div className="lg:col-span-1 space-y-6">
           <ManualCard manualPreview={manualPreview} manualPath={asset.manualPath} />
-          <AgentChat />
         </div>
       </div>
     </div>
   );
 };
 
+function resolveQrSrc(asset: any): string {
+  const raw = asset?.qrImageUrl ?? asset?.qrImagePath; // accept either key
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw;
+  const base =
+    (import.meta as any)?.env?.VITE_MCP_BASE_URL ||
+    (process as any)?.env?.REACT_APP_MCP_BASE_URL ||
+    '';
+  return base ? `${String(base).replace(/\/$/, '')}/${String(raw).replace(/^\//, '')}` : raw;
+}
+
 // Sub-components defined outside the main component body to prevent re-renders
-const AssetInfo: React.FC<{asset: Asset}> = ({ asset }) => (
-    <div className="bg-slate-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row items-start gap-6">
-        <img src={asset.qrImageUrl} alt="QR Code" className="w-32 h-32 rounded-md bg-white p-1" />
-        <div className="flex-grow">
-            <h1 className="text-3xl font-bold text-white">{asset.name}</h1>
-            <p className="text-lg text-slate-300">{asset.model}</p>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-slate-400">
-                <p><span className="font-semibold">Serial:</span> {asset.serialNumber}</p>
-                <p><span className="font-semibold">Location:</span> {asset.location}</p>
-            </div>
-        </div>
+const AssetInfo: React.FC<{ asset: Asset }> = ({ asset }) => (
+  <div className="bg-slate-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row items-start gap-6">
+    <img
+      src={resolveQrSrc(asset)}
+      alt="QR Code"
+      className="w-32 h-32 rounded-md bg-white p-1"
+      crossOrigin="anonymous"
+      onError={(e) => {
+        // optional: graceful fallback if image 404s
+        (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+      }}
+    />
+    <div className="flex-grow">
+      <h1 className="text-3xl font-bold text-white">{asset.name}</h1>
+      <p className="text-lg text-slate-300">{asset.model}</p>
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-slate-400">
+        <p><span className="font-semibold">Serial:</span> {asset.serialNumber}</p>
+        <p><span className="font-semibold">Location:</span> {asset.location}</p>
+      </div>
     </div>
+  </div>
 );
 
 const ManualCard: React.FC<{manualPreview: ManualPreview | null, manualPath: string}> = ({ manualPreview, manualPath }) => (
@@ -203,95 +223,5 @@ function normalizeAgentResponse(resp: any): { text: string; toolCount?: number; 
   return { text: JSON.stringify(resp) };
 }
 
-const AgentChat: React.FC = () => {
-  const { conversationId } = useApp();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [isThinking, setIsThinking] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleSend = async () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-
-    const userMessage: ChatMessage = { from: 'user', text: trimmed };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsThinking(true);
-
-    try {
-      const resp = await agentService.askAgent(trimmed, conversationId);
-      const { text, toolCount, toolCalls } = normalizeAgentResponse(resp);
-      const assistantMessage: ChatMessage = { from: 'assistant', text, toolCount, toolCalls };
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (err: any) {
-      const friendly = err?.message ?? 'Sorry, I encountered an error.';
-      setMessages(prev => [...prev, { from: 'assistant', text: friendly }]);
-    } finally {
-      setIsThinking(false);
-    }
-  };
-
-  // Enter to send (onKeyDown is the modern event to use)
-  const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isThinking) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, isThinking]);
-
-  return (
-    <div className="bg-slate-800 rounded-lg shadow-lg flex flex-col h-[32rem]">
-      <h3 className="text-lg font-semibold p-4 border-b border-slate-700 text-white">Ask the Ops Agent</h3>
-
-      <div ref={scrollRef} className="flex-grow p-4 space-y-4 overflow-y-auto">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-xs md:max-w-sm rounded-lg px-4 py-2 whitespace-pre-wrap break-words ${
-                msg.from === 'user' ? 'bg-cyan-700 text-white' : 'bg-slate-700 text-slate-200'
-              }`}
-            >
-              {msg.text}
-              {msg.from === 'assistant' && (msg.toolCount ?? msg.toolCalls)?.length ? (
-                <div className="mt-2 text-xs text-slate-400">
-                  {typeof msg.toolCount === 'number'
-                    ? `Tools invoked: ${msg.toolCount}`
-                    : `Tools invoked: ${msg.toolCalls?.length ?? 0}`}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
-        {isThinking && <div className="text-slate-400 text-sm">Agent is thinking...</div>}
-      </div>
-
-      <div className="p-4 border-t border-slate-700 flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={onInputKeyDown}
-          placeholder="e.g., Log filter change..."
-          className="flex-grow bg-slate-700 p-2 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-600"
-          disabled={isThinking}
-        />
-        <button
-          onClick={handleSend}
-          disabled={isThinking}
-          className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded-md disabled:bg-slate-500"
-          aria-label="Send"
-        >
-          <PaperAirplaneIcon className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-};
 
 export default AssetDetailScreen;

@@ -10,17 +10,20 @@ import org.springframework.web.server.ResponseStatusException;
 import us.dtaylor.mcpserver.domain.Asset;
 import us.dtaylor.mcpserver.dto.ManualPreviewDto;
 import us.dtaylor.mcpserver.repository.AssetRepository;
+import us.dtaylor.mcpserver.util.ManualPathNormalizer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNSUPPORTED_MEDIA_TYPE;
 
 @Service
 public class AssetService {
@@ -64,73 +67,50 @@ public class AssetService {
      * Supports file:// URIs in dev. For http(s) we return a stub with no preview.
      */
     public ManualPreviewDto getManualPreview(UUID assetId, int maxChars) {
-        Asset asset = repo.findById(assetId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset not found: " + assetId));
-
-        String manualPath = normalizeManualPath(asset.getManualPath());
-        if (manualPath == null || manualPath.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Manual path not set for asset " + assetId);
+        Asset asset = getById(assetId);
+        String raw = asset.getManualPath();
+        if (raw == null || raw.isBlank()) {
+            throw new ResponseStatusException(NOT_FOUND, "Manual path not set for asset " + assetId);
         }
 
-        try {
-            URI uri = URI.create(manualPath);
-            String scheme = (uri.getScheme() == null ? "" : uri.getScheme().toLowerCase());
+        String normalized = ManualPathNormalizer.normalize(raw);
 
-            // only preview file: URIs; http(s) returns a safe hint
-            if ("file".equals(scheme)) {
-                var path = Paths.get(uri);
-                var sb = new StringBuilder();
-                boolean truncated = false;
-                try (BufferedReader br = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+        try {
+            URI uri = URI.create(normalized);
+            String scheme = uri.getScheme();
+
+            if ("file".equalsIgnoreCase(scheme)) {
+                Path path = Paths.get(uri);
+                if (!Files.exists(path) || !Files.isReadable(path)) {
+                    throw new ResponseStatusException(NOT_FOUND, "Manual not found/readable at: " + path);
+                }
+
+                // stream up to maxChars
+                StringBuilder sb = new StringBuilder(Math.min(maxChars, 8192));
+                try (var reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
                     int c;
-                    while ((c = br.read()) != -1) {
+                    while ((c = reader.read()) != -1) {
                         sb.append((char) c);
                         if (sb.length() >= maxChars) {
-                            truncated = true;
                             break;
                         }
                     }
                 }
-                return new ManualPreviewDto(asset.getId(), manualPath, sb.toString(), truncated);
-            } else if ("http".equals(scheme) || "https".equals(scheme)) {
-                return new ManualPreviewDto(
-                        asset.getId(),
-                        manualPath,
-                        "[Preview not available for non-file manuals. Open the full manual link.]",
-                        true
-                );
-            } else {
-                throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported manual scheme: " + scheme);
+                boolean truncated = Files.size(path) > sb.length();
+                return new ManualPreviewDto(asset.getId(), normalized, sb.toString(), truncated);
             }
+
+            if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                // Still avoid remote fetch for security; UI provides "Open Full Manual".
+                return new ManualPreviewDto(asset.getId(), normalized,
+                        "[Preview not available for remote manuals. Open the full manual link.]", true);
+            }
+
+            throw new ResponseStatusException(UNSUPPORTED_MEDIA_TYPE, "Unsupported manual scheme: " + scheme);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Invalid manual URI: " + manualPath, e);
+            throw new ResponseStatusException(UNSUPPORTED_MEDIA_TYPE, "Invalid manual path/URI: " + raw, e);
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Manual not found/readable at: " + manualPath, e);
+            throw new ResponseStatusException(NOT_FOUND, "Failed to read manual: " + raw, e);
         }
     }
-
-    private static String normalizeManualPath(String raw) {
-        if (raw == null) {
-            return null;
-        }
-        String s = raw.trim()
-                .replace("\u200B", "").replace("\uFEFF", "")
-                .replace('\u2011', '-').replace('\u2013', '-').replace('\u2014', '-');
-
-        String lower = s.toLowerCase();
-        if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("file:/")) {
-            return s;
-        }
-        if (lower.startsWith("file://")) {
-            return "file:/" + s.substring("file://".length());
-        }
-        if (s.startsWith("/")) {
-            return "file:" + s;                          // Unix absolute
-        }
-        if (s.matches("^[A-Za-z]:[\\\\/].*")) {
-            return "file:/" + s.replace("\\", "/"); // Windows absolute
-        }
-        return s;
-    }
-
 }

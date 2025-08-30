@@ -82,6 +82,7 @@ public class AgentController {
                 1) Call 'asset.search' to look up the asset.
                 2) If the user asks for a manual, call 'manual.get'.
                 3) If the user describes work completed, call 'worklog.create' with action, technician, duration, and notes.
+                4) If the user asks for past work, call 'worklog.list'.
                 Be concise and ask clarifying questions if the QR code or asset ID is missing.
                 """;
 
