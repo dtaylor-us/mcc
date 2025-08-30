@@ -64,6 +64,11 @@ const AdminScreen: React.FC = () => {
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                 </div>
                 <div>
+                    <label htmlFor="asset-type" className="block text-sm font-medium text-slate-300 mb-1">Asset Type</label>
+                    <input type="text" name="assetType" id="asset-type" value={formData.assetType} onChange={handleChange}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+                </div>
+                <div>
                     <label htmlFor="model" className="block text-sm font-medium text-slate-300 mb-1">Model</label>
                     <input type="text" name="model" id="model" value={formData.model} onChange={handleChange}
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500" />
@@ -74,8 +79,8 @@ const AdminScreen: React.FC = () => {
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                 </div>
                 <div>
-                    <label htmlFor="location" className="block text-sm font-medium text-slate-300 mb-1">Location</label>
-                    <input type="text" name="location" id="location" value={formData.location} onChange={handleChange}
+                    <label htmlFor="brand" className="block text-sm font-medium text-slate-300 mb-1">Brand</label>
+                    <input type="text" name="brand" id="brand" value={formData.brand} onChange={handleChange}
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                 </div>
                 <div>
@@ -88,21 +93,9 @@ const AdminScreen: React.FC = () => {
                         id="manualPath"
                         value={formData.manualPath}
                         onChange={handleChange}
-                        placeholder="e.g. /mnt/manuals/air-handler.txt or https://… or file:///…"
+                        placeholder="https://example.com/manuals/air-handler.txt"
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
-                    <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                        <button type="button" onClick={() => setExample('/mnt/manuals/air-handler.txt')}
-                            className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">/mnt/manuals/…</button>
-                        <button type="button" onClick={() => setExample('C:\\manuals\\air-handler.txt')}
-                            className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">C:\manuals\…</button>
-                        <button type="button" onClick={() => setExample('file:///mnt/manuals/air-handler.txt')}
-                            className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">file:///…</button>
-                        <button type="button" onClick={() => setExample('https://example.com/manuals/air-handler.txt')}
-                            className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">https://…</button>
-                        <button type="button" onClick={() => setExample('https://myacct.blob.core.windows.net/manuals/air-handler.txt')}
-                            className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">Blob URL</button>
-                    </div>
                 </div>
                 <div className="pt-4">
                     <button

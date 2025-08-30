@@ -14,7 +14,7 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
     Optional<Asset> findByQrCode(String qr);
 
     /**
-     * Case-insensitive search across name, model, serialNumber, and location.
+     * Case-insensitive search across name, model, serialNumber, and brand.
      * If :query is blank/null, all assets are returned (paginated).
      */
     @Query("""
@@ -24,7 +24,8 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
               LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%')) OR
               LOWER(a.model) LIKE LOWER(CONCAT('%', :query, '%')) OR
               LOWER(a.serialNumber) LIKE LOWER(CONCAT('%', :query, '%')) OR
-              LOWER(a.location) LIKE LOWER(CONCAT('%', :query, '%')))
+              LOWER(a.brand) LIKE LOWER(CONCAT('%', :query, '%')) OR
+              LOWER(a.assetType) LIKE LOWER(CONCAT('%', :query, '%')))
         """)
     Page<Asset> search(@Param("query") String query, Pageable pageable);
 }

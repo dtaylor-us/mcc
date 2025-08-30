@@ -10,7 +10,8 @@ public record CreateAssetRequest(
         @NotBlank String name,
         String model,
         String serialNumber,
-        String location,
+        String brand,
+        String assetType,
         @NotBlank String manualPath, // e.g. file:/... or s3://...
         Instant installedAt
 ) {}

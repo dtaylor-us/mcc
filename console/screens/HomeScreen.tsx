@@ -58,7 +58,7 @@ const HomeScreen: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, model, serial, or location"
+              placeholder="Search by name, model, serial, or brand"
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
             <button
@@ -89,7 +89,7 @@ const HomeScreen: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Model</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Serial Number</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">brand</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
@@ -103,9 +103,10 @@ const HomeScreen: React.FC = () => {
                           className="w-full text-left px-6 py-4 flex flex-wrap gap-x-6 gap-y-1 items-center focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         >
                           <span className="text-sm font-medium text-white min-w-[10rem] truncate">{asset.name}</span>
+                          <span className="text-sm font-medium text-white min-w-[10rem] truncate">{asset.assetType}</span>
+                          <span className="text-sm text-slate-300 min-w-[10rem] truncate">{asset.brand}</span>
                           <span className="text-sm text-slate-300 min-w-[8rem] truncate">{asset.model}</span>
                           <span className="text-sm text-slate-300 min-w-[10rem] truncate">{asset.serialNumber}</span>
-                          <span className="text-sm text-slate-300 min-w-[10rem] truncate">{asset.location}</span>
                         </button>
                       </td>
                     </tr>
@@ -127,10 +128,11 @@ const HomeScreen: React.FC = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-white font-semibold truncate">{asset.name}</div>
+                        <div className="text-white font-semibold truncate">{asset.assetType}</div>
                         <div className="text-slate-300 text-sm truncate">
                           {asset.model ?? '—'} · {asset.serialNumber ?? '—'}
                         </div>
-                        <div className="text-slate-400 text-xs truncate">{asset.location ?? '—'}</div>
+                        <div className="text-slate-400 text-xs truncate">{asset.brand ?? '—'}</div>
                       </div>
                       <span className="shrink-0 text-slate-400 text-sm">View ›</span>
                     </div>

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import us.dtaylor.mcpserver.domain.Asset;
 import us.dtaylor.mcpserver.domain.WorkLog;
 import us.dtaylor.mcpserver.service.AssetService;
-import us.dtaylor.mcpserver.service.ManualService;
 import us.dtaylor.mcpserver.service.WorkLogService;
 
 import java.util.Map;
@@ -17,13 +16,11 @@ import java.util.UUID;
 public class AssetTools {
     private final AssetService assets;
     private final WorkLogService worklogs;
-    private final ManualService manuals;
     private final AssetService assetService;
 
-    public AssetTools(AssetService assets, WorkLogService worklogs, ManualService manuals, AssetService assetService) {
+    public AssetTools(AssetService assets, WorkLogService worklogs, AssetService assetService) {
         this.assets = assets;
         this.worklogs = worklogs;
-        this.manuals = manuals;
         this.assetService = assetService;
     }
 
@@ -34,21 +31,7 @@ public class AssetTools {
         return opt.map(AssetResponse::from).orElseGet(() -> new AssetResponse("NOT_FOUND", null, null, null, null, null));
     }
 
-    // ====== Tool 2: get manual ======
-    /*
-         Returns up to 2000 characters of the manual text for the given asset ID (UUID).
-         If the asset or manual is not found, throws an IllegalArgumentException.
-         TODO: integrate an embedding/vector search so the agent pulls only the relevant passages.
-               This is the common RAG pattern for long manuals.
-     */
-    @Tool(name = "manual.get", description = "Fetch the operator manual text for a given assetId (UUID).")
-    public ManualResponse manual(@JsonProperty("asset_id") String assetId) {
-        var asset = assets.findByQrOrId(assetId).orElseThrow(() -> new IllegalArgumentException("asset not found"));
-        String text = manuals.readManual(asset.getManualPath());
-        return new ManualResponse(asset.getId().toString(), Math.min(2000, text.length()), text.substring(0, Math.min(2000, text.length())));
-    }
-
-    // ====== Tool 3: create work log ======
+    // ====== Tool 2: create work log ======
     @Tool(name = "worklog.create", description = "Create a maintenance worklog for the asset. Use short action, optional notes, duration minutes, and technician.")
     public Map<String, Object> createWorklog(CreateWorklogRequest req) {
         var wl = new WorkLog();
@@ -62,7 +45,7 @@ public class AssetTools {
         return Map.of("worklogId", saved.getId(), "status", "CREATED");
     }
 
-    // ====== Tool 4: retrieve work logs for asset ======
+    // ====== Tool 3: retrieve work logs for asset ======
     @Tool(name = "worklog.list", description = "List all worklogs for a given assetId (UUID).")
     public WorkLog[] listWorklogs(@JsonProperty("asset_id") String assetId) {
         var asset = assets.findByQrOrId(assetId).orElseThrow(() -> new IllegalArgumentException("asset not found"));
@@ -80,12 +63,9 @@ public class AssetTools {
             @JsonProperty(value = "notes", required = false) String notes) {
     }
 
-    public record ManualResponse(String assetId, int previewChars, String preview) {
-    }
-
     public record AssetResponse(String status, String id, String qrCode, String name, String model, String location) {
         static AssetResponse from(Asset a) {
-            return new AssetResponse("OK", a.getId().toString(), a.getQrCode(), a.getName(), a.getModel(), a.getLocation());
+            return new AssetResponse("OK", a.getId().toString(), a.getQrCode(), a.getName(), a.getModel(), a.getBrand());
         }
     }
 }

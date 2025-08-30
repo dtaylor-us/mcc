@@ -15,10 +15,11 @@ public class Asset {
     private String name;
     private String model;
     private String serialNumber;
-    private String location;
+    private String brand;
     private String manualPath; // e.g. file:/opt/manuals/abc.txt or s3://...
     private Instant installedAt;
     private String qrImagePath;  // e.g., "https://cdn.example.com/qr/QR-12345.png"
+    private String assetType;
 
     // Getters and Setters
     public UUID getId() {
@@ -61,12 +62,12 @@ public class Asset {
         this.serialNumber = serialNumber;
     }
 
-    public String getLocation() {
-        return location;
+    public String getBrand() {
+        return brand;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
 
     public String getManualPath() {
@@ -91,6 +92,14 @@ public class Asset {
 
     public void setQrImagePath(String qrImagePath) {
         this.qrImagePath = qrImagePath;
+    }
+
+    public String getAssetType() {
+        return assetType;
+    }
+
+    public void setAssetType(String assetType) {
+        this.assetType = assetType;
     }
 
 }

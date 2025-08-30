@@ -1,20 +1,23 @@
 package us.dtaylor.mcpserver.api;
 
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import us.dtaylor.mcpserver.domain.Asset;
 import us.dtaylor.mcpserver.dto.AssetResponse;
 import us.dtaylor.mcpserver.dto.CreateAssetRequest;
-import us.dtaylor.mcpserver.dto.ManualPreviewDto;
 import us.dtaylor.mcpserver.service.AssetCreationService;
 import us.dtaylor.mcpserver.service.AssetService;
-import us.dtaylor.mcpserver.util.ManualPathNormalizer;
 
 import java.time.Instant;
 import java.util.List;
@@ -68,14 +71,6 @@ public class AssetController {
         return ResponseEntity.ok(assetService.getByQr(qrCode));
     }
 
-    // GET /api/assets/v1/{id}/manual/preview
-    @GetMapping(value = "/{id}/manual/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ManualPreviewDto> getManualPreview(
-            @PathVariable UUID id,
-            @RequestParam(name = "maxChars", defaultValue = "2000") int maxChars) {
-        return ResponseEntity.ok(assetService.getManualPreview(id, maxChars));
-    }
-
     @PostMapping
     public ResponseEntity<AssetResponse> create(@RequestBody @Validated CreateAssetRequest req) throws Exception {
         Asset a = new Asset();
@@ -83,8 +78,8 @@ public class AssetController {
         a.setName(req.name());
         a.setModel(req.model());
         a.setSerialNumber(req.serialNumber());
-        a.setLocation(req.location());
-        a.setManualPath(ManualPathNormalizer.normalize(req.manualPath()));
+        a.setBrand(req.brand());
+        a.setManualPath(req.manualPath());
         a.setInstalledAt(req.installedAt() == null ? Instant.now() : req.installedAt());
 
         Asset saved = createService.createWithQr(a);
@@ -95,9 +90,10 @@ public class AssetController {
                 saved.getName(),
                 saved.getModel(),
                 saved.getSerialNumber(),
-                saved.getLocation(),
+                saved.getBrand(),
                 saved.getManualPath(),
-                saved.getQrImagePath()
+                saved.getQrImagePath(),
+                saved.getAssetType()
         ));
     }
 }
