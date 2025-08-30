@@ -9,7 +9,9 @@ spring:
         repository:
           jdbc:
             # In prod we recommend managing schema via migrations; dev overrides this.
-            initialize-schema: never
+            initialize-schema: always
+    openai:
+      api-key: ${OPENAI_API_KEY:}
 
 management:
   endpoints:
@@ -20,3 +22,7 @@ management:
   endpoint:
     health:
       show-details: never
+
+app:
+  cors:
+    allowed-origins: http://localhost:8080,http://localhost:3000,http://localhost:5173

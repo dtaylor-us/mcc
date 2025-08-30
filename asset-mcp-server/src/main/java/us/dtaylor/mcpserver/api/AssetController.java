@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import us.dtaylor.mcpserver.domain.Asset;
 import us.dtaylor.mcpserver.dto.AssetResponse;
 import us.dtaylor.mcpserver.dto.CreateAssetRequest;
+import us.dtaylor.mcpserver.dto.ManualPreviewDto;
 import us.dtaylor.mcpserver.service.AssetCreationService;
 import us.dtaylor.mcpserver.service.AssetService;
 
@@ -66,8 +68,8 @@ public class AssetController {
     }
 
     // GET /api/assets/v1/{id}/manual/preview
-    @GetMapping("/{id}/manual/preview")
-    public ResponseEntity<AssetService.ManualPreview> getManualPreview(
+    @GetMapping(value = "/{id}/manual/preview", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ManualPreviewDto> getManualPreview(
             @PathVariable UUID id,
             @RequestParam(name = "maxChars", defaultValue = "2000") int maxChars) {
         return ResponseEntity.ok(assetService.getManualPreview(id, maxChars));

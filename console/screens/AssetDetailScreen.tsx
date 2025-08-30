@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../App';
 import { mcpService, agentService } from '../services/apiService';
@@ -189,59 +189,109 @@ const WorkLogTable: React.FC<{workLogs: WorkLog[]}> = ({ workLogs }) => (
 );
 
 
+function normalizeAgentResponse(resp: any): { text: string; toolCount?: number; toolCalls?: unknown[] } {
+  // Shape A (what your code expected): { content: { answer: string }, toolCalls?: [] }
+  if (resp?.content?.answer) {
+    return { text: resp.content.answer, toolCount: resp?.toolCount, toolCalls: resp?.toolCalls };
+  }
+  // Shape B (what your API actually returns): { answer: string, toolCount?: number }
+  if (resp?.answer) {
+    return { text: resp.answer, toolCount: resp.toolCount };
+  }
+  // Fallbacks (allow plain string or unknown shapes for debugging)
+  if (typeof resp === 'string') return { text: resp };
+  return { text: JSON.stringify(resp) };
+}
+
 const AgentChat: React.FC = () => {
-    const { conversationId } = useApp();
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [input, setInput] = useState('');
-    const [isThinking, setIsThinking] = useState(false);
+  const { conversationId } = useApp();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        const userMessage: ChatMessage = { from: 'user', text: input };
-        setMessages(prev => [...prev, userMessage]);
-        setInput('');
-        setIsThinking(true);
-        try {
-            const response = await agentService.askAgent(input, conversationId);
-            const assistantMessage: ChatMessage = { from: 'assistant', text: response.content, toolCalls: response.toolCalls };
-            setMessages(prev => [...prev, assistantMessage]);
-        } catch (error) {
-            const errorMessage: ChatMessage = { from: 'assistant', text: 'Sorry, I encountered an error.' };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsThinking(false);
-        }
-    };
+  const handleSend = async () => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
 
-    return (
-        <div className="bg-slate-800 rounded-lg shadow-lg flex flex-col h-[32rem]">
-            <h3 className="text-lg font-semibold p-4 border-b border-slate-700 text-white">Ask the Ops Agent</h3>
-            <div className="flex-grow p-4 space-y-4 overflow-y-auto">
-                {messages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs md:max-w-sm rounded-lg px-4 py-2 ${msg.from === 'user' ? 'bg-cyan-700 text-white' : 'bg-slate-700 text-slate-200'}`}>
-                            {msg.text}
-                        </div>
-                    </div>
-                ))}
-                {isThinking && <div className="text-slate-400 text-sm">Agent is thinking...</div>}
+    const userMessage: ChatMessage = { from: 'user', text: trimmed };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsThinking(true);
+
+    try {
+      const resp = await agentService.askAgent(trimmed, conversationId);
+      const { text, toolCount, toolCalls } = normalizeAgentResponse(resp);
+      const assistantMessage: ChatMessage = { from: 'assistant', text, toolCount, toolCalls };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err: any) {
+      const friendly = err?.message ?? 'Sorry, I encountered an error.';
+      setMessages(prev => [...prev, { from: 'assistant', text: friendly }]);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
+  // Enter to send (onKeyDown is the modern event to use)
+  const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isThinking) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, isThinking]);
+
+  return (
+    <div className="bg-slate-800 rounded-lg shadow-lg flex flex-col h-[32rem]">
+      <h3 className="text-lg font-semibold p-4 border-b border-slate-700 text-white">Ask the Ops Agent</h3>
+
+      <div ref={scrollRef} className="flex-grow p-4 space-y-4 overflow-y-auto">
+        {messages.map((msg, index) => (
+          <div key={index} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`max-w-xs md:max-w-sm rounded-lg px-4 py-2 whitespace-pre-wrap break-words ${
+                msg.from === 'user' ? 'bg-cyan-700 text-white' : 'bg-slate-700 text-slate-200'
+              }`}
+            >
+              {msg.text}
+              {msg.from === 'assistant' && (msg.toolCount ?? msg.toolCalls)?.length ? (
+                <div className="mt-2 text-xs text-slate-400">
+                  {typeof msg.toolCount === 'number'
+                    ? `Tools invoked: ${msg.toolCount}`
+                    : `Tools invoked: ${msg.toolCalls?.length ?? 0}`}
+                </div>
+              ) : null}
             </div>
-            <div className="p-4 border-t border-slate-700 flex gap-2">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyPress={e => e.key === 'Enter' && handleSend()}
-                    placeholder="e.g., Log filter change..."
-                    className="flex-grow bg-slate-700 p-2 rounded-md"
-                    disabled={isThinking}
-                />
-                <button onClick={handleSend} disabled={isThinking} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded-md disabled:bg-slate-500">
-                    <PaperAirplaneIcon className="h-5 w-5" />
-                </button>
-            </div>
-        </div>
-    );
+          </div>
+        ))}
+        {isThinking && <div className="text-slate-400 text-sm">Agent is thinking...</div>}
+      </div>
+
+      <div className="p-4 border-t border-slate-700 flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={onInputKeyDown}
+          placeholder="e.g., Log filter change..."
+          className="flex-grow bg-slate-700 p-2 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-600"
+          disabled={isThinking}
+        />
+        <button
+          onClick={handleSend}
+          disabled={isThinking}
+          className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded-md disabled:bg-slate-500"
+          aria-label="Send"
+        >
+          <PaperAirplaneIcon className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default AssetDetailScreen;

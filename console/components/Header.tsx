@@ -11,7 +11,6 @@ const Header: React.FC = () => {
     <header className="bg-slate-800 shadow-md">
       <nav className="container mx-auto flex justify-between items-center p-4">
         <NavLink to="/" className="flex items-center gap-3">
-          <WrenchScrewdriverIcon className="h-8 w-8 text-cyan-400" />
           <h1 className="text-xl font-bold text-white">Ops Maintenance Console</h1>
         </NavLink>
         <div className="flex items-center gap-2">

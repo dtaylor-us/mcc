@@ -1,5 +1,6 @@
 package us.dtaylor.mcpserver.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +28,7 @@ public class WorkLog {
     @JoinColumn(name = "asset_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_worklog_asset"))
     @OnDelete(action = OnDeleteAction.CASCADE) // DB-level cascade delete
+    @JsonIgnore
     // @JsonBackReference // only if you expose Asset.workLogs and use Managed/Back pair
     private Asset asset;
 
