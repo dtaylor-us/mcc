@@ -12,7 +12,13 @@ spring:
             initialize-schema: always
     openai:
       api-key: ${OPENAI_API_KEY:}
-
+#  cloud:
+#    azure:
+#      keyvault:
+#        secret:
+#          property-sources:
+#            - name: key-vault-property-source
+#              endpoint: https://<your-vault>.vault.azure.net/
 management:
   endpoints:
     web:

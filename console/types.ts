@@ -25,7 +25,3 @@ export interface ChatMessage {
   text: string;
   toolCalls?: any[];
 }
-
-export interface ManualPreview {
-  preview: string;
-}

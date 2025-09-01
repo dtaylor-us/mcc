@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())         // enable CORS below
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator", "/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/agent/ask").hasAuthority("SCOPE_Read.Access") // adjust scope as needed
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults());
         return http.build();

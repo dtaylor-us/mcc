@@ -3,10 +3,22 @@ server:
 
 spring:
   datasource:
-    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agentdb}}
-    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
-    username: ${DATASOURCE_USERNAME:agent}
-    password: ${DATASOURCE_PASSWORD:agent}
+    # Datasource URL provided via environment variables.  Use the DB_HOST,
+    # DB_PORT and DB_NAME variables to assemble a sensible default if
+    # DATASOURCE_URL is not explicitly set.  The default points to a
+    # PostgreSQL instance on localhost.  See README for details on
+    # configuring these values for containerised or managed databases.
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      # In production validate the schema rather than attempting to update
+      # automatically.  Schema migrations should be managed via Flyway or
+      # Liquibase in a CI/CD pipeline.
+      ddl-auto: validate
+    open-in-view: false
   ai:
     mcp:
       client:
@@ -17,10 +29,10 @@ spring:
         sse:
           connections:
             assetServer:
-              url: ${MCP_SERVER_URL:http://asset-mcp-server:8081}
+              url: ${MCP_SERVER_URL}
               sse-endpoint: /sse
     openai:
-      api-key: ${OPENAI_API_KEY:}
+      api-key: ${OPENAI_API_KEY}
       chat:
         options:
           model: ${OPENAI_MODEL:gpt-4o}
@@ -32,6 +44,11 @@ spring:
             # In prod prefer schema managed by migrations; set to 'always'
             # only if your DB user can create tables and you accept auto-init.
             initialize-schema: never
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/c07f229d-ff5a-4a54-9be4-1e37e3783cdd/v2.0
 
 management:
   endpoints:
@@ -45,5 +62,5 @@ management:
 # No default creds in prod; provide via env if using Basic auth
 app:
   security:
-    username: ${APP_SECURITY_USERNAME:}
-    password: ${APP_SECURITY_PASSWORD:}
+    username: ${APP_USER:}
+    password: ${APP_PASSWORD:}

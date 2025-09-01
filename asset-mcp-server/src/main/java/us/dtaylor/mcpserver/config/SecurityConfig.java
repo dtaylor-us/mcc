@@ -27,9 +27,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/**", "/qr-images/**").permitAll()
+                        .requestMatchers("/qr-images/**").permitAll()
+                        .requestMatchers("/api/**").hasAuthority("SCOPE_MCP.Read")
                         .anyRequest().permitAll()
-                );
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
     }
 
@@ -39,7 +41,7 @@ public class SecurityConfig {
 
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(allowedOrigins); // e.g. http://localhost:8080, http://localhost:3000
-        cfg.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(Collections.singletonList("*"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);

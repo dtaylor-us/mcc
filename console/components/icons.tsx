@@ -54,3 +54,27 @@ export const PaperAirplaneIcon: React.FC<IconProps> = (props) => (
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
     </svg>
 );
+
+export const LoginIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+       stroke="currentColor" strokeWidth={1.5} {...props}>
+    {/* Door outline */}
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M15.75 9V5.25C15.75 4.00736 14.7426 3 13.5 3H7.5C6.25736 3 5.25 4.00736 5.25 5.25v13.5C5.25 19.9926 6.25736 21 7.5 21H13.5c1.2426 0 2.25-1.0074 2.25-2.25V15" />
+    {/* Arrow entering */}
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M18.75 15L21.75 12M21.75 12L18.75 9M21.75 12H9" />
+  </svg>
+);
+
+export const LogoutIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+       stroke="currentColor" strokeWidth={1.5} {...props}>
+    {/* Door outline */}
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M15.75 9V5.25C15.75 4.00736 14.7426 3 13.5 3H7.5C6.25736 3 5.25 4.00736 5.25 5.25v13.5C5.25 19.9926 6.25736 21 7.5 21H13.5c1.2426 0 2.25-1.0074 2.25-2.25V15" />
+    {/* Arrow exiting */}
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M12 9L9 12M9 12L12 15M9 12H21.75" />
+  </svg>
+);

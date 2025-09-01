@@ -11,10 +11,15 @@ spring:
     # DATASOURCE_URL is not explicitly set.  The default points to a
     # PostgreSQL instance on localhost.  See README for details on
     # configuring these values for containerised or managed databases.
-    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:assetdb}}
-    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
-    username: ${DATASOURCE_USERNAME:asset}
-    password: ${DATASOURCE_PASSWORD:asset}
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/c07f229d-ff5a-4a54-9be4-1e37e3783cdd/v2.0
   jpa:
     hibernate:
       # In production validate the schema rather than attempting to update

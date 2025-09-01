@@ -20,6 +20,11 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/c07f229d-ff5a-4a54-9be4-1e37e3783cdd/v2.0
 
 # Configuration for QR code handling.  The scan base URL is used
 # when generating QR codes for new assets; the codes will direct the
