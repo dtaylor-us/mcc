@@ -3,6 +3,26 @@
 # (application-dev.yml, application-prod.yml) or env vars.
 
 spring:
+  datasource:
+    # Datasource URL provided via environment variables.  Use the DB_HOST,
+    # DB_PORT and DB_NAME variables to assemble a sensible default if
+    # DATASOURCE_URL is not explicitly set.  The default points to a
+    # PostgreSQL instance on localhost.  See README for details on
+    # configuring these values for containerised or managed databases.
+    url: ${DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agentdb}}
+    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    username: ${DATASOURCE_USERNAME:agent}
+    password: ${DATASOURCE_PASSWORD:agent}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/c07f229d-ff5a-4a54-9be4-1e37e3783cdd/v2.0
+
   ai:
     chat:
       memory:
@@ -11,7 +31,7 @@ spring:
             # In prod we recommend managing schema via migrations; dev overrides this.
             initialize-schema: always
     openai:
-      api-key: ${OPENAI_API_KEY:}
+      api-key: ${OPENAI_API_KEY}
 #  cloud:
 #    azure:
 #      keyvault:

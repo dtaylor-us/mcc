@@ -74,7 +74,6 @@ public class AgentController {
      */
     @PostMapping("/ask")
     public Map<String, Object> ask(@RequestBody AskRequest req) {
-        // 1) Get MCP tool callbacks
         ToolCallback[] callbacks = this.toolCallbackProvider.getToolCallbacks();
 
         String systemPrompt = """
@@ -85,11 +84,10 @@ public class AgentController {
                 Be concise and ask clarifying questions if the QR code or asset ID is missing.
                 """;
 
-        // 2) Memory advisor (unchanged)
+
         MessageChatMemoryAdvisor memoryAdvisor =
                 MessageChatMemoryAdvisor.builder(this.chatMemory).build();
 
-        // 3) Use .toolCallbacks(...) instead of .tools(...)
         String answer = chatClient.prompt()
                 .system(systemPrompt)
                 .user(req.userMessage())

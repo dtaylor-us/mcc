@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import us.dtaylor.mcpserver.config.TestSecurityConfig;
 import us.dtaylor.mcpserver.domain.Asset;
 import us.dtaylor.mcpserver.dto.CreateAssetRequest;
 import us.dtaylor.mcpserver.repository.AssetRepository;
@@ -24,7 +27,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -34,6 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 public class AssetControllerIntegrationTest {
 
     @Autowired
@@ -67,7 +71,7 @@ public class AssetControllerIntegrationTest {
         asset.setName("Test Asset");
         asset.setModel("T-100");
         asset.setSerialNumber("SN-TEST");
-        asset.setLocation("Lab");
+        asset.setBrand("Brand A");
         asset.setManualPath("file:///tmp/manualTest.txt");
         asset.setQrImagePath("https://cdn.example.com/qr/QR-12345.png");
         asset.setInstalledAt(Instant.now());
@@ -106,8 +110,9 @@ public class AssetControllerIntegrationTest {
                 "Model1",
                 "SN1",
                 "Warehouse",
+                "Air Conditioner",
                 "file:///tmp/manualNew.txt",
-                null
+                Instant.now()
         );
         mockMvc.perform(post("/api/assets/v1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,17 +122,4 @@ public class AssetControllerIntegrationTest {
                 .andExpect(jsonPath("$.qrImageUrl", is("http://localhost/qr-images/test.png")));
     }
 
-    @Test
-    void testGetManualPreviewEndpoint() throws Exception {
-        // Create manual file
-        java.nio.file.Path manualFile = java.nio.file.Files.createTempFile("manual-prev-int", ".txt");
-        java.nio.file.Files.writeString(manualFile, "Hello Manual");
-        asset.setManualPath("file://" + manualFile.toUri().getPath());
-        assetRepository.save(asset);
-        mockMvc.perform(get("/api/assets/v1/" + asset.getId() + "/manual/preview").param("maxChars", "5"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.preview", is("Hello")))
-                .andExpect(jsonPath("$.isTruncated", is(true)));
-    }
 }

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL database used by both modules.  Two separate
   # schemas/credentials are used to isolate the asset and agent data.
@@ -32,6 +30,7 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: assetdb
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       QR_SCAN_BASE_URL: http://ops-agent-app:8080/scan
       QR_STORAGE_LOCAL_DIR: /app/qr
       QR_STORAGE_PUBLIC_BASE_URL: http://asset-mcp-server:8081/qr-images

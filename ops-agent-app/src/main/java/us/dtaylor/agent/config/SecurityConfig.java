@@ -35,12 +35,6 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${app.security.username:agent}")
-    private String username;
-
-    @Value("${app.security.password:password}")
-    private String password;
-
     /**
      * Configures the security filter chain.  Disables CSRF for simplicity in
      * stateless REST APIs, permits health checks without authentication,
@@ -56,26 +50,10 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())         // enable CORS below
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator", "/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/agent/ask").hasAuthority("SCOPE_Read.Access") // adjust scope as needed
+                        .requestMatchers("/agent/ask").hasAuthority("SCOPE_Read.access")
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
-    }
-
-    /**
-     * Provides an in-memory user store containing a single user defined by
-     * configuration properties.  The password is hashed using BCrypt.
-     *
-     * @return the user details service
-     */
-    @Bean
-    public UserDetailsService users() {
-        PasswordEncoder encoder = passwordEncoder();
-        UserDetails user = User.withUsername(username)
-                .password(encoder.encode(password))
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
     }
 
     /**
@@ -94,7 +72,7 @@ public class SecurityConfig {
 
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(allowedOrigins); // e.g. http://localhost:8080, http://localhost:3000
-        cfg.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(Collections.singletonList("*"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);

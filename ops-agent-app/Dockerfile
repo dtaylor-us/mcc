@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # ----------- Build Stage ------------
 FROM maven:3.9.11-eclipse-temurin-21-noble AS build
 

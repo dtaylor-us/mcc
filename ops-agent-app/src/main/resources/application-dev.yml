@@ -32,7 +32,7 @@ spring:
               sse-endpoint: /sse
     openai:
       # Dev fallback only; in prod, require a real secret via env.
-      api-key: ${OPENAI_API_KEY:dummy}
+      api-key: ${OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o
